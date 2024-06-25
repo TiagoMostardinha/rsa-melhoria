@@ -22,31 +22,34 @@ def app():
         (6, 5): []
     }
 
-    dir_coordinates = "./coordinates/"
-    # TODO: missing importing the coordinates
-
-    # TODO: remove this
-    graph = {
-        (0, 2): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (1, 0): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (1, 3): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (2, 0): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (2, 3): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (2, 4): [0, 1, 2, 3, 4],
-        (3, 1): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (3, 5): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        (4, 2): [0, 1, 2, 3, 4],
-        (4, 6): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-        (5, 1): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-        (5, 6): [0, 1, 2, 3, 4],
-        (6, 4): [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-        (6, 5): [0, 1, 2, 3, 4]
+    edges = {
+        0: (),
+        1: (),
+        2: (),
+        3: (),
+        4: (),
+        5: (),
+        6: ()
     }
 
-    # Create Streets Shared Region
-    streets_region = Streets(graph)
+    # Load coordinates
+    dir_coordinates = "./coordinates/"
+    for key in graph.keys():
+        with open(dir_coordinates + str(key[0]) + "" + str(key[1]) + ".csv", "r") as file:
+            lines = file.readlines()
+            for line in lines:
+                line = line.strip()
+                if line != "":
+                    line = line.split(",")
+                    graph[key].append((float(line[0]), float(line[1])))
+        
+        edges[key[0]] = graph[key][0]
 
-    # Creating obu threads
+
+    # Create Streets Shared Region
+    streets_region = Streets(edges,graph)
+
+    # Creating obu 
     obu_list : list[Car]= []
 
     # TODO:missing random edge and random position
@@ -54,7 +57,7 @@ def app():
     obu_list.append(Car(streets_region, "obu2", 2,"10.10.10.2", "2:2:2:2:2:2", 0, 1))
     obu_list.append(Car(streets_region, "obu3", 3,"10.10.10.3", "3:3:3:3:3:3", 0, 2))
 
-    # Creating rsu threads
+    # Creating rsu 
     rsu_list : list[Station]= []
 
     rsu_list.append(Station(streets_region, "rsu1", 4,"10.10.10.4", "4:4:4:4:4:4", (40.637727, -8.656250)))
@@ -65,7 +68,7 @@ def app():
     obu_threads : list[threading.Thread] = []
 
     for i in range(len(rsu_list)):
-        rsu_threads.append(threading.Thread(target=rsu_threads[i].start))
+        rsu_threads.append(threading.Thread(target=rsu_list[i].start))
         rsu_threads[i].start()
 
     for i in range(len(obu_list)):

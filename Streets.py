@@ -2,6 +2,7 @@ import threading
 
 
 class Streets:
+    edges: dict
     graph: dict
     finished: bool
     obu_threads: list
@@ -10,7 +11,8 @@ class Streets:
     connected_to: dict
     semaphore: threading.Semaphore
 
-    def __init__(self,graph):
+    def __init__(self, edges, graph):
+        self.edges = edges
         self.graph = graph
         self.finished = False
         self.obu_threads = []
@@ -41,27 +43,27 @@ class Streets:
         # TODO: send connected_to from rsu or obu
         pass
 
-    def is_on_edge(self,id,position):
+    def is_on_edge(self, id, position):
         # TODO: Missing semaphore
         # TODO: check if current Car is on a edge
         pass
 
-    def change_edge(self,id,current_edge):
+    def change_edge(self, id, current_edge):
         # TODO: Missing semaphore
         # TODO: check which is the successor edge
         pass
 
-    def check_ranges(self,id):
+    def check_ranges(self, id):
         # TODO: Missing semaphore
         # TODO: check if the current id has connection to anyone
         pass
 
-    def get_speed_semaphore(self,id,speed,semaphore):
+    def get_speed_semaphore(self, id, speed, semaphore):
         # TODO: Missing semaphore
         # TODO: get speed based on some algorithm
-        pass        
+        pass
 
-    def get_path(self,id,current_edge,destination_location):
+    def get_path(self, id, current_edge, destination_location):
         # TODO: Missing semaphore
         # TODO: get path with some algorithm
         pass
