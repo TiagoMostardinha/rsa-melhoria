@@ -53,9 +53,9 @@ def app():
     obu_list : list[Car]= []
 
     # TODO:missing random edge and random position
-    obu_list.append(Car(streets_region, "obu1", 1,"10.10.10.1", "1:1:1:1:1:1", 0, 0))
-    obu_list.append(Car(streets_region, "obu2", 2,"10.10.10.2", "2:2:2:2:2:2", 0, 1))
-    obu_list.append(Car(streets_region, "obu3", 3,"10.10.10.3", "3:3:3:3:3:3", 0, 2))
+    obu_list.append(Car(streets_region, "obu1", 1,"10.10.10.1", "1:1:1:1:1:1", 0,(0,2)))
+    obu_list.append(Car(streets_region, "obu2", 2,"10.10.10.2", "2:2:2:2:2:2", 0, (1,0)))
+    obu_list.append(Car(streets_region, "obu3", 3,"10.10.10.3", "3:3:3:3:3:3", 0, (1,3)))
 
     # Creating rsu 
     rsu_list : list[Station]= []
@@ -80,6 +80,11 @@ def app():
 
     for i in range(len(obu_list)):
         obu_threads[i].join()
+
+
+# TODO: atribute a random edge to the car
+def random_edge(n_edges) -> int:
+    pass
 
 
 
