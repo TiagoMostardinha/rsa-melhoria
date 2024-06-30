@@ -111,6 +111,8 @@ def stop_simulation():
 @app.route('/info', methods=['GET'])
 def get_info():
     global streets_region
+    if streets_region is None:
+        return "Simulation not started"
     info = streets_region.get_info()
     return json.dumps(info)
 

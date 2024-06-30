@@ -1,0 +1,33 @@
+{
+    "accEngaged": true,
+    "acceleration": 0.0,
+    "altitude": 0.0,
+    "altitudeConf": 0,
+    "brakePedal": false,
+    "collisionWarning": true,
+    "cruiseControl": true,
+    "curvature": 0,
+    "driveDirection": "FOWARD",
+    "emergencyBrake": false,
+    "gasPedal": true,
+    "heading": 0.0,
+    "headingConf": 0.0,
+    "latitude": 40.637598965599416,
+    "length": 5.0,
+    "longitude": -8.657264405268354,
+    "semiMajorConf": 0,
+    "semiMajorOrient": 0,
+    "semiMinorConf": 0,
+    "specialVehicle": {
+        "publicTransportContainer": {
+            "embarkationStatus": false
+        }
+    },
+    "speed": 1.0,
+    "speedConf": 0.0,
+    "speedLimiter": true,
+    "stationID": 5,
+    "stationType": 19,
+    "width": 2.0,
+    "yawRate": 0.0
+}

@@ -33,7 +33,7 @@ class Car:
         self.mac = mac
         self.length = 5
         self.width = 2
-        self.speed = 0
+        self.speed = 1
         self.position = position
         self.location = ()
         self.virt_semaphore = 0
@@ -74,7 +74,10 @@ class Car:
             # TODO: remove this
             # print("Car[", self.id, "]:\tst=", self.current_street, "\tpos=", self.position, "\tloc=",
             #       self.location)
-            time.sleep(1 + random.random())
+            time.sleep(self.speed + random.random())
+
+        client.loop_stop()
+        client.disconnect()
 
     def on_message(self, client, userdata, msg):
         message = json.loads(msg.payload.decode('utf-8'))
@@ -117,12 +120,13 @@ class Car:
             0,
             0,
             SpecialVehicle(PublicTransportContainer(False)),
-            self.speed,
+            float(self.speed),
             0,
             True,
             self.id,
             19,
             self.width,
             0,
-        ).to_dict()
-        publish.single('vanetza/in/cam', json.dumps(cam_message), hostname=self.address)
+        )
+        msg = CAM.to_dict(cam_message)
+        publish.single('vanetza/in/cam', json.dumps(msg), hostname=self.address)
