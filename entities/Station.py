@@ -22,5 +22,4 @@ class Station:
         self.streets_region = streets_region
 
     def start(self):
-        # TODO: Implement the start thread of the station
-        pass
+        self.streets_region.set_initial_station(self)

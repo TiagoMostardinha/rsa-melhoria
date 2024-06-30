@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #frame {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        #left-frame {
+            flex: 2;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        #right-frame {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: #f4f4f4;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #frame-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        #frame-info {
+            margin-top: 20px;
+            padding: 10px;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="frame">
+        <div id="left-frame">
+            <div id="map"></div>
+        </div>
+        <div id="right-frame">
+            <h1>Controls</h1>
+            <div id="frame-buttons">
+                <button onclick="startSimulation()">Start</button>
+                <button onclick="stopSimulation()">Stop</button>
+            </div>
+            <div id="frame-info">
+                hey
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Map Config
+        var map = L.map('map').setView([40.63712, -8.65634], 18.5);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        var carIcon = L.icon({
+            iconUrl: 'static/car.png',
+            iconSize: [24, 24],
+        });
+        var antennaIcon = L.icon({
+            iconUrl: 'static/antenna.png',
+
+            iconSize: [24, 24],
+        });
+
+        // Simulation Controls
+
+        let hasStarted = false;
+        function startSimulation() {
+            fetch('/start', { method: 'POST' })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data);
+                });
+            hasStarted = true;
+        }
+
+        function stopSimulation() {
+            fetch('/stop', { method: 'POST' })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data);
+                });
+            hasStarted = false;
+        }
+
+        setInterval(() => {
+            if (hasStarted) {
+                fetch('/info')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        // Add logic to update the map with car positions and stations
+                        console.log(data);
+
+                        // Clear existing markers
+                        map.eachLayer(function (layer) {
+                            if (layer instanceof L.Marker) {
+                                map.removeLayer(layer);
+                            }
+                        });
+
+                        // Add station markers
+                        Object.entries(data.stations_location).forEach(([key, station]) => {
+                            let marker = L.marker([station[0], station[1]], { icon: antennaIcon }).addTo(map);
+                            marker.bindPopup(`<b>Station Id:${key}</b>`, { autoClose: false, closeOnClick: false });
+                        });
+
+                        // Add car markers
+                        Object.entries(data.car_positions).forEach(([key, car]) => {
+                            let marker = L.marker([car[2][0], car[2][1]], { icon: carIcon }).addTo(map);
+                            marker.bindPopup(`<b>Car Id:${key}</b>`, { autoClose: false, closeOnClick: false });
+                        });
+                    });
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>
