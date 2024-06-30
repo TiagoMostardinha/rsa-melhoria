@@ -91,7 +91,7 @@ class CAM:
     emergency_brake: bool
     gas_pedal: bool
     heading: float
-    heading_conf: float
+    heading_conf: int
     latitude: float
     length: float
     longitude: float
@@ -100,12 +100,12 @@ class CAM:
     semi_minor_conf: int
     special_vehicle: SpecialVehicle
     speed: float
-    speed_conf: float
+    speed_conf: int
     speed_limiter: bool
     station_id: int
     station_type: int
     width: float
-    yaw_rate: float
+    yaw_rate: int
 
     def __init__(
         self,
@@ -121,7 +121,7 @@ class CAM:
         emergency_brake: bool,
         gas_pedal: bool,
         heading: float,
-        heading_conf: float,
+        heading_conf: int,
         latitude: float,
         length: float,
         longitude: float,
@@ -130,12 +130,12 @@ class CAM:
         semi_minor_conf: int,
         special_vehicle: SpecialVehicle,
         speed: float,
-        speed_conf: float,
+        speed_conf: int,
         speed_limiter: bool,
         station_id: int,
         station_type: int,
         width: float,
-        yaw_rate: float,
+        yaw_rate: int,
     ) -> None:
         self.acc_engaged = acc_engaged
         self.acceleration = acceleration
@@ -180,7 +180,7 @@ class CAM:
         emergency_brake = from_bool(obj.get("emergencyBrake"))
         gas_pedal = from_bool(obj.get("gasPedal"))
         heading = from_float(obj.get("heading"))
-        heading_conf = from_float(obj.get("headingConf"))
+        heading_conf = from_int(obj.get("headingConf"))
         latitude = from_float(obj.get("latitude"))
         length = from_float(obj.get("length"))
         longitude = from_float(obj.get("longitude"))
@@ -189,12 +189,12 @@ class CAM:
         semi_minor_conf = from_int(obj.get("semiMinorConf"))
         special_vehicle = SpecialVehicle.from_dict(obj.get("specialVehicle"))
         speed = from_float(obj.get("speed"))
-        speed_conf = from_float(obj.get("speedConf"))
+        speed_conf = from_int(obj.get("speedConf"))
         speed_limiter = from_bool(obj.get("speedLimiter"))
         station_id = from_int(obj.get("stationID"))
         station_type = from_int(obj.get("stationType"))
         width = from_float(obj.get("width"))
-        yaw_rate = from_float(obj.get("yawRate"))
+        yaw_rate = from_int(obj.get("yawRate"))
         return CAM(
             acc_engaged,
             acceleration,
@@ -239,21 +239,22 @@ class CAM:
         result["emergencyBrake"] = from_bool(self.emergency_brake)
         result["gasPedal"] = from_bool(self.gas_pedal)
         result["heading"] = from_float(self.heading)
-        result["headingConf"] = from_float(self.heading_conf)
+        result["headingConf"] = from_int(self.heading_conf)
         result["latitude"] = to_float(self.latitude)
         result["length"] = from_float(self.length)
         result["longitude"] = to_float(self.longitude)
         result["semiMajorConf"] = from_int(self.semi_major_conf)
         result["semiMajorOrient"] = from_int(self.semi_major_orient)
         result["semiMinorConf"] = from_int(self.semi_minor_conf)
-        result["specialVehicle"] = to_class(SpecialVehicle, self.special_vehicle)
+        result["specialVehicle"] = to_class(
+            SpecialVehicle, self.special_vehicle)
         result["speed"] = from_float(self.speed)
-        result["speedConf"] = from_float(self.speed_conf)
+        result["speedConf"] = from_int(self.speed_conf)
         result["speedLimiter"] = from_bool(self.speed_limiter)
         result["stationID"] = from_int(self.station_id)
         result["stationType"] = from_int(self.station_type)
         result["width"] = from_float(self.width)
-        result["yawRate"] = from_float(self.yaw_rate)
+        result["yawRate"] = from_int(self.yaw_rate)
         return result
 
 
