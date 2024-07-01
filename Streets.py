@@ -1,5 +1,7 @@
 import threading
 import random
+import geopy.distance
+import subprocess
 
 
 class Streets:
@@ -11,6 +13,7 @@ class Streets:
     car_positions: dict
     stations_location: dict
     connected_to: dict
+    station_network: dict
     access: threading.Semaphore
 
     def __init__(self, edges, graph):
@@ -22,6 +25,7 @@ class Streets:
         self.car_positions = {}
         self.stations_location = {}
         self.connected_to = {}
+        self.station_network = {}
         self.access = threading.Semaphore()
 
 ################## synchronized methods ##################
@@ -35,6 +39,7 @@ class Streets:
     def set_initial_station(self, station):
         self.access.acquire()
         self.stations_location[station.id] = station.location
+        self.station_network[station.id] = {}
         self.rsu_threads[station.id] = station
         self.access.release()
 
@@ -69,14 +74,34 @@ class Streets:
         self.access.release()
 
     def set_connected_to(self, id, connected_to):
-        # TODO: Missing semaphore
-        # TODO: send connected_to from rsu or obu
-        pass
+        self.access.acquire()
+        self.connected_to[id] = connected_to
+        self.access.release()
 
-    def check_ranges(self, id):
-        # TODO: Missing semaphore
+    def check_ranges(self, id,range):
+        self.access.acquire()
+
         # TODO: check if the current id has connection to anyone
-        pass
+        station_coord = self.stations_location[id]
+
+        # TODO: create a list that are in range and create function that apply the rules
+        in_range_cars = {}
+
+        for car_id,car_info in self.car_positions.items():
+            car_coord = car_info[2]
+            if station_coord != [] and car_coord != []:
+                distance = geopy.distance.distance(station_coord, car_coord).m
+                if distance < range:
+                    in_range_cars[car_id] = True
+                else:
+                    in_range_cars[car_id] = False
+            else:
+                in_range_cars[car_id] = False
+        
+        self.config_station_network(id,in_range_cars)
+
+
+        self.access.release()
 
     def choose_next_street(self, id):
         self.access.acquire()
@@ -109,8 +134,6 @@ class Streets:
         stations_info = {}
         for key,value in self.stations_location.items():
             stations_info[key] = list(value)
-        
-        # TODO:Missing connected to
 
         return {
             "edges": edges_info,
@@ -145,15 +168,38 @@ class Streets:
             car.next_street = ()
         return car.current_street, car.position
 
-    def get_speed_semaphore(self, id, speed, semaphore):
-        # TODO: Missing semaphore
-        # TODO: get speed based on some algorithm
-        pass
-
     def get_location(self, current_street, position):
         return self.graph[current_street][position]
+    
+    def config_station_network(self,id,in_range_cars:dict):
+        station_name = self.rsu_threads[id].name
+        station_mac = self.rsu_threads[id].mac
+
+        for car_id,is_near in in_range_cars.items():
+            car_name = self.obu_threads[car_id].name
+            car_mac = self.obu_threads[car_id].mac
+
+            try:
+                if not self.station_network[id] or self.station_network[id][car_id] != is_near:
+                    if is_near:
+                        subprocess.run(f"docker compose exec {station_name} unblock {car_mac}", shell=True, check=True)
+                        subprocess.run(f"docker compose exec {car_name} unblock {station_mac}", shell=True, check=True)
+                    else:
+                        subprocess.run(f"docker compose exec {station_name} block {car_mac}", shell=True, check=True)
+                        subprocess.run(f"docker compose exec {car_name} block {station_mac}", shell=True, check=True)
+            except Exception:
+                continue
+        
+        self.station_network[id] = in_range_cars
+
+
 
     def get_path(self, id, current_edge, destination_location):
         # TODO: Missing semaphore
         # TODO: get path with some algorithm
+        pass
+
+    def get_speed_semaphore(self, id, speed, semaphore):
+        # TODO: Missing semaphore
+        # TODO: get speed based on some algorithm
         pass

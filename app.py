@@ -3,9 +3,13 @@ import threading
 from entities.Car import Car
 from entities.Station import Station
 from flask import Flask, render_template, request
-import json,subprocess,time
+import json,subprocess,time,logging
 
 app = Flask(__name__)
+
+# Disable Flask's default logging
+log = logging.getLogger('werkzeug')
+log.disabled = True
 
 streets_region = None
 obu_list : list[Car]= []
@@ -14,7 +18,9 @@ rsu_list : list[Station]= []
 def init_simulation():
     global streets_region, obu_list, rsu_list
 
-    # TODO: missing docker
+    process = subprocess.Popen("docker compose down", shell=True)
+    process.wait()
+
     process = subprocess.Popen("docker compose up -d", shell=True)
     process.wait()
 
@@ -61,17 +67,33 @@ def init_simulation():
         
         edges[key[0]] = graph[key][0]
 
+    intersections = {
+        0 : [(1,0),(0,2)],
+        1 : [(3,1),(5,1)],
+        2 : [(0,2),(4,2)],
+        3 : [(1,3),(2,3)],
+        4 : [(2,4),(6,4)],
+        5 : [(3,5),(6,5)],
+        6 : [(4,6),(5,6)],
+    }
 
     # Create Streets Shared Region
     streets_region = Streets(edges,graph)
 
-    # TODO:missing random edge and random position
-    obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 0,(0,2)))
-    obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 0, (1,0)))
-    obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", 0, (1,3)))
+    # Creating Cars(obu) and Stations(rsu)
+    rsu_range = 60
 
-    rsu_list.append(Station(streets_region, "rsu1", 1,"192.168.98.11", "6e:06:e0:03:00:01", (40.637727, -8.656250)))
-    rsu_list.append(Station(streets_region, "rsu2", 2,"192.168.98.12", "6e:06:e0:03:00:02", (40.637148, -8.657087)))
+    # TODO:missing random edge and random position
+    obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 0,(1,0)))
+    obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 2, (1,0)))
+    obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", 4, (1,0)))
+    obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", 0, (6,4)))
+    obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", 2, (6,4)))
+
+    rsu_list.append(Station(streets_region, "rsu1", 1,"192.168.98.11", "6e:06:e0:03:00:01", (40.637983, -8.656642),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu2", 2,"192.168.98.12", "6e:06:e0:03:00:02", (40.637285, -8.656363),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu3", 3,"192.168.98.13", "6e:06:e0:03:00:03", (40.637495, -8.657532),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu4", 4,"192.168.98.14", "6e:06:e0:03:00:04", (40.636347, -8.655998),rsu_range))
 
     # Starting rsu and obu threads
     rsu_threads : list[threading.Thread] = [threading.Thread(target=rsu.start) for rsu in rsu_list]
@@ -89,9 +111,8 @@ def init_simulation():
     for i in range(len(obu_list)):
         obu_threads[i].join()
 
-    process = subprocess.Popen("docker compose down", shell=True)
-    process.wait()
     print("Simulation finished")
+    streets_region = None
 
 # TODO: atribute a random edge to the car
 def random_edge(n_edges) -> int:
@@ -101,11 +122,15 @@ def random_edge(n_edges) -> int:
 @app.route('/start', methods=['POST'])
 def start_simulation():
     init_simulation()
+    print("Simulation started")
     return "Simulation started"
 
 @app.route('/stop', methods=['POST'])
 def stop_simulation():
     streets_region.set_finished()
+    process = subprocess.Popen("docker compose down", shell=True)
+    process.wait()
+    print("Simulation stopped")
     return "Simulation stopped"
 
 @app.route('/info', methods=['GET'])
