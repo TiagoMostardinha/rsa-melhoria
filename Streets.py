@@ -118,6 +118,18 @@ class Streets:
 
         self.access.release()
     
+    def get_car_street(self,car_id):
+        self.access.acquire()
+        street = self.car_positions[car_id][0]
+        self.access.release()
+        return street
+    
+    def get_edge_location(self,edge):
+        self.access.acquire()
+        location = self.edges[edge]
+        self.access.release()
+        return location
+    
     def get_info(self):
         edges_info = {}
         for key,value in self.edges.items():

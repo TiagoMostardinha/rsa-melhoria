@@ -68,7 +68,7 @@ def init_simulation():
         edges[key[0]] = graph[key][0]
 
     intersections = {
-        0 : [(1,0),(0,2)],
+        0 : [(1,0),(2,0)],
         1 : [(3,1),(5,1)],
         2 : [(0,2),(4,2)],
         3 : [(1,3),(2,3)],
@@ -84,16 +84,16 @@ def init_simulation():
     rsu_range = 60
 
     # TODO:missing random edge and random position
-    obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 0,(1,0)))
-    obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 2, (1,0)))
+    obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 0,(1,3)))
+    obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 0, (2,3)))
     obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", 4, (1,0)))
     obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", 0, (6,4)))
     obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", 2, (6,4)))
 
-    rsu_list.append(Station(streets_region, "rsu1", 1,"192.168.98.11", "6e:06:e0:03:00:01", (40.637983, -8.656642),rsu_range))
-    rsu_list.append(Station(streets_region, "rsu2", 2,"192.168.98.12", "6e:06:e0:03:00:02", (40.637285, -8.656363),rsu_range))
-    rsu_list.append(Station(streets_region, "rsu3", 3,"192.168.98.13", "6e:06:e0:03:00:03", (40.637495, -8.657532),rsu_range))
-    rsu_list.append(Station(streets_region, "rsu4", 4,"192.168.98.14", "6e:06:e0:03:00:04", (40.636347, -8.655998),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu1", 1,"192.168.98.11", "6e:06:e0:03:00:01", (40.637983, -8.656642),choose_intersection(intersections,[0]),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu2", 2,"192.168.98.12", "6e:06:e0:03:00:02", (40.637285, -8.656363),choose_intersection(intersections,[1,3]),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu3", 3,"192.168.98.13", "6e:06:e0:03:00:03", (40.637495, -8.657532),choose_intersection(intersections,[2,4]),rsu_range))
+    rsu_list.append(Station(streets_region, "rsu4", 4,"192.168.98.14", "6e:06:e0:03:00:04", (40.636347, -8.655998),choose_intersection(intersections,[5,6]),rsu_range))
 
     # Starting rsu and obu threads
     rsu_threads : list[threading.Thread] = [threading.Thread(target=rsu.start) for rsu in rsu_list]
@@ -118,6 +118,8 @@ def init_simulation():
 def random_edge(n_edges) -> int:
     pass
 
+def choose_intersection(intersections,edges_to_station:list) -> dict:
+    return {k: intersections[k] for k in edges_to_station}
 
 @app.route('/start', methods=['POST'])
 def start_simulation():
@@ -127,9 +129,11 @@ def start_simulation():
 
 @app.route('/stop', methods=['POST'])
 def stop_simulation():
+    global streets_region
     streets_region.set_finished()
     process = subprocess.Popen("docker compose down", shell=True)
     process.wait()
+    streets_region = None
     print("Simulation stopped")
     return "Simulation stopped"
 
