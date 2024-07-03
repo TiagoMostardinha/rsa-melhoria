@@ -81,10 +81,8 @@ class Streets:
     def check_ranges(self, id,range):
         self.access.acquire()
 
-        # TODO: check if the current id has connection to anyone
         station_coord = self.stations_location[id]
 
-        # TODO: create a list that are in range and create function that apply the rules
         in_range_cars = {}
 
         for car_id,car_info in self.car_positions.items():
@@ -203,15 +201,3 @@ class Streets:
                 continue
         
         self.station_network[id] = in_range_cars
-
-
-
-    def get_path(self, id, current_edge, destination_location):
-        # TODO: Missing semaphore
-        # TODO: get path with some algorithm
-        pass
-
-    def get_speed_semaphore(self, id, speed, semaphore):
-        # TODO: Missing semaphore
-        # TODO: get speed based on some algorithm
-        pass

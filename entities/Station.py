@@ -70,6 +70,8 @@ class Station:
 
             self.set_semaphore_to_streets()
 
+            self.send_spatem()
+
         client.loop_stop()
         client.disconnect()
 
@@ -78,7 +80,6 @@ class Station:
         msg_type = msg.topic
 
         if msg_type == 'vanetza/out/cam':
-            # TODO: Implement the logic for the CAM message, stationID, timestamp, latitude, longitude, speed
             new_cam = {
                 'timestamp': message['timestamp'],
                 'stationID': message['stationID'],
@@ -97,8 +98,6 @@ class Station:
                 self.connected_to[new_cam['stationID']] = new_cam
 
             self.streets_region.set_connected_to(self.id, self.connected_to)
-
-        # TODO: SPATEM
 
     def check_validity(self,client):
         client.loop_stop()
@@ -136,7 +135,6 @@ class Station:
             closest_to_edge[edge] = sorted(closest_to_edge[edge], key=itemgetter(1))
         return closest_to_edge
 
-    # TODO: Implement the logic for checking which car in different lanes is the closest to the station
     def set_semaphore_to_streets(self):
         closest_to_edge = self.distance_station_to_car()
 
@@ -170,11 +168,11 @@ class Station:
                 self.street_semaphore[streets[1]] = 0
                 continue
 
-            if car_from_different_street[streets[0]][1] < 20 and car_from_different_street[streets[1]][1] < 20:
-                if (car_from_different_street[streets[0]][1] - car_from_different_street[streets[1]][1]) < -20:
+            if car_from_different_street[streets[0]][1] < 30 and car_from_different_street[streets[1]][1] < 30:
+                if (car_from_different_street[streets[0]][1] - car_from_different_street[streets[1]][1]) < -30:
                     self.street_semaphore[streets[0]] = 0
                     self.street_semaphore[streets[1]] = 1
-                elif (car_from_different_street[streets[0]][1] - car_from_different_street[streets[1]][1]) > 20:
+                elif (car_from_different_street[streets[0]][1] - car_from_different_street[streets[1]][1]) > 30:
                     self.street_semaphore[streets[0]] = 1
                     self.street_semaphore[streets[1]] = 0
                 else:
@@ -189,39 +187,11 @@ class Station:
                             self.street_semaphore[streets[0]] = 1
                         else:
                             self.street_semaphore[streets[1]] = 2
-
-                
-                # TODO: remove this
-                print(car_from_different_street[streets[0]],"\n",car_from_different_street[streets[1]])
-                    
-                
-
             else:
                 self.street_semaphore[streets[0]] = 0
                 self.street_semaphore[streets[1]] = 0
 
-            
-                
 
-            
-        # TODO: remove this
-        if self.id == 2:
-            print("\nEdge 3:\n(1,3)\t",self.street_semaphore[(1,3)],"\n(2,3)\t",self.street_semaphore[(2,3)])
-            
-
-        
-
-
-                
-
-
-        
-
-        
-
-
-
-    # TODO: can remove this method
     def send_cam(self):
         cam_message = CAM(
             False,
@@ -255,6 +225,52 @@ class Station:
         msg = CAM.to_dict(cam_message)
         publish.single('vanetza/in/cam', json.dumps(msg), hostname=self.address)
     
-    # TODO: do the same for SPATEM
     def send_spatem(self):
-        pass
+        spatem={
+            "intersections":[
+                {
+                    "id":{
+                        "id":self.id
+                    },
+                    "revision":1,
+                    "states":[
+                        
+                    ],
+                    "status":{
+                        "failureFlash": False,
+                        "failureMode": False,
+                        "fixedTimeOperation": False,
+                        "manualControlIsEnabled": False,
+                        "noValidMAPisAvailableAtThisTime": False,
+                        "noValidSPATisAvailableAtThisTime": False,
+                        "off": False,
+                        "preemptIsActive": False,
+                        "recentChangeInMAPassignedLanesIDsUsed": False,
+                        "recentMAPmessageUpdate": False,
+                        "signalPriorityIsActive": False,
+                        "standbyOperation": False,
+                        "stopTimeIsActivated": False,
+                        "trafficDependentOperation": False
+                    }
+
+                }
+            ]
+        }
+
+        for street,semaphore in self.street_semaphore.items():
+            spatem["intersections"][0]["states"].append(
+                {
+                    "signalGroup":int(f"{street[0]}{street[1]}"),
+                    "state-time-speed":[
+                        {
+                            "eventState":semaphore,
+                            "timing":{
+                                "minEndTime":7
+                            }
+                        }
+                    ]
+                }
+            )
+        
+        publish.single('vanetza/in/spatem', json.dumps(spatem), hostname=self.address)
+

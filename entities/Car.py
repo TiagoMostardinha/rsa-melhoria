@@ -21,7 +21,6 @@ class Car:
     position: int
     location: tuple
     virt_semaphore: int
-    last_received_cam: time
     last_received_spatem: time
     connected_to: list
     old_connected_to: list
@@ -43,7 +42,6 @@ class Car:
         1 = yellow
         2 = red
         '''
-        self.last_received_cam = None
         self.last_received_spatem = None
         self.connected_to = []
         self.old_connected_to = []
@@ -51,9 +49,13 @@ class Car:
         self.next_street = ()
         self.streets_region = streets_region
 
-    # TODO: Implement the start thread of the car
+        self.location = self.streets_region.get_location(self.current_street,self.position)
+
     def start(self):
-        # TODO: implement mqtt
+        self.streets_region.set_initial_car(self)
+
+        time.sleep(1)
+
         client = mqtt.Client(self.name)
         client.on_message = self.on_message
         client.connect(self.address, 1883, 60)
@@ -61,20 +63,36 @@ class Car:
         client.subscribe(topic=[("vanetza/out/spatem", 0)])
         client.loop_start()
 
-        self.streets_region.set_initial_car(self)
+        tick = 0
 
         while not self.streets_region.has_finished():
+            tick += 1
             if self.next_street == ():
                 self.streets_region.choose_next_street(self.id)
+            
 
-            self.streets_region.get_next_position_and_location(self.id)
+            self.check_validity()
+
+            if self.virt_semaphore == 0:
+                self.speed = 1
+            elif self.virt_semaphore == 1:
+                self.speed = 0.5
+            else:
+                self.speed = 0
+
+
+            if self.speed != 0:
+                if tick >= (1/self.speed):
+                    self.streets_region.get_next_position_and_location(self.id)
+                    tick = 0
+            else:
+                tick = 0
 
             self.send_cam()
 
-            # TODO: remove this
-            # print("Car[", self.id, "]:\tst=", self.current_street, "\tpos=", self.position, "\tloc=",
-            #       self.location)
-            time.sleep(self.speed + random.random())
+            
+            
+            time.sleep(2 + random.random())
 
         client.loop_stop()
         client.disconnect()
@@ -83,20 +101,16 @@ class Car:
         message = json.loads(msg.payload.decode('utf-8'))
         msg_type = msg.topic
 
-        # TODO: Implement the message handling SPATEM
+        if msg_type == 'vanetza/out/spatem':
+            states = message['fields']['spat']['intersections'][0]['states']
 
-        # if msg_type == 'vanetza/out/spatem':
-        #     edges = self.graph.edges()
-        #     states = message['fields']['spat']['intersections'][0]['states']
+            for lane in states:
+                street_str = f"{lane['signalGroup']:02}"
+                street = (int(street_str[0]),int(street_str[1]))
 
-        #     for state in states:
-        #         if state['signalGroup'] == edges[self.current_edge]['attr']['signalGroup']:
-        #             if state['state-time-speed'][0]['eventState'] == 2:
-        #                 self.signal_group = state['state-time-speed'][0]['eventState']
-
-        #                 self.last_received_spatem = message['timestamp']
-
-    # TODO: Implement the message sending CAM
+                if self.current_street == street:
+                    self.virt_semaphore = lane['state-time-speed'][0]['eventState']
+                    self.last_received_spatem = message['timestamp']
 
     def send_cam(self):
         cam_message = CAM(
@@ -130,3 +144,10 @@ class Car:
         )
         msg = CAM.to_dict(cam_message)
         publish.single('vanetza/in/cam', json.dumps(msg), hostname=self.address)
+
+    def check_validity(self):
+        if not self.last_received_spatem:
+            return
+        
+        if (time.time() - self.last_received_spatem) > 3:
+            self.speed = 1

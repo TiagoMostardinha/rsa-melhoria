@@ -4,6 +4,7 @@ from entities.Car import Car
 from entities.Station import Station
 from flask import Flask, render_template, request
 import json,subprocess,time,logging
+import random
 
 app = Flask(__name__)
 
@@ -82,13 +83,22 @@ def init_simulation():
 
     # Creating Cars(obu) and Stations(rsu)
     rsu_range = 60
+    isRandom = True
 
-    # TODO:missing random edge and random position
-    obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 0,(1,3)))
-    obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 0, (2,3)))
-    obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", 4, (1,0)))
-    obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", 0, (6,4)))
-    obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", 2, (6,4)))
+    if isRandom:
+        car_street_position = random_street_position(graph,5)
+
+        obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", car_street_position[0][0],car_street_position[0][1]))
+        obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", car_street_position[1][0],car_street_position[1][1]))
+        obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", car_street_position[2][0],car_street_position[2][1]))
+        obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", car_street_position[3][0],car_street_position[3][1]))
+        obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", car_street_position[4][0],car_street_position[4][1]))
+    else:
+        obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 7,(1,3)))
+        obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 7, (2,3)))
+        obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", 0, (2,3)))
+        obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", 2, (2,3)))
+        obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", 3, (2,3)))
 
     rsu_list.append(Station(streets_region, "rsu1", 1,"192.168.98.11", "6e:06:e0:03:00:01", (40.637983, -8.656642),choose_intersection(intersections,[0]),rsu_range))
     rsu_list.append(Station(streets_region, "rsu2", 2,"192.168.98.12", "6e:06:e0:03:00:02", (40.637285, -8.656363),choose_intersection(intersections,[1,3]),rsu_range))
@@ -114,9 +124,21 @@ def init_simulation():
     print("Simulation finished")
     streets_region = None
 
-# TODO: atribute a random edge to the car
-def random_edge(n_edges) -> int:
-    pass
+def random_street_position(graph,n_car) -> dict[tuple]:
+    car_street_position = {}
+    streets = list(graph.keys())
+
+    for i in range(n_car):
+        while True:
+            street = streets[random.randint(0,len(streets)-1)]
+            position = random.randint(0,len(graph[street])-2)
+            
+            if (street,position) not in car_street_position.values():
+                car_street_position[i] = (position,street)
+                break
+    
+    return car_street_position
+
 
 def choose_intersection(intersections,edges_to_station:list) -> dict:
     return {k: intersections[k] for k in edges_to_station}
