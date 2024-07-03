@@ -124,9 +124,16 @@
                         </label>
                     </div>
                     <div class="check">
-                        <label for="ShowLanes">
+                        <label for="showLanes">
                             <input type="checkbox" id="showLanes">
                             lanes
+
+                        </label>
+                    </div>
+                    <div class="check">
+                        <label for="showEdges">
+                            <input type="checkbox" id="showEdges">
+                            edges
 
                         </label>
                     </div>
@@ -206,6 +213,7 @@
         let showConnections = false;
         let showRange = false;
         let showLanes = false;
+        let showEdges = false;
 
         let car_colors = {
             5: 'blue',
@@ -225,6 +233,9 @@
 
         document.getElementById('showLanes').addEventListener('change', function () {
             showLanes = this.checked;
+        });
+        document.getElementById('showEdges').addEventListener('change', function () {
+            showEdges = this.checked;
         });
 
         function updateState(newState) {
@@ -283,6 +294,7 @@
 
                 const nameCell = document.createElement('td');
                 nameCell.textContent = car.name;
+                nameCell.style.color = car_colors[car.id];
                 row.appendChild(nameCell);
 
                 const locationCell = document.createElement('td');
@@ -295,11 +307,11 @@
 
                 const virtSemaphoreCell = document.createElement('td');
                 if (car.virt_semaphore == 0) {
-                    virtSemaphoreCell.textContent= 'green';
+                    virtSemaphoreCell.style.backgroundColor = 'green';
                 } else if (car.virt_semaphore == 1) {
-                    virtSemaphoreCell.textContent= 'yellow';
+                    virtSemaphoreCell.style.backgroundColor = 'yellow';
                 } else {
-                    virtSemaphoreCell.textContent= 'red';
+                    virtSemaphoreCell.style.backgroundColor = 'red';
                 }
                 row.appendChild(virtSemaphoreCell);
 
@@ -347,7 +359,7 @@
                 const connectedToCell = document.createElement('td');
                 connectedToCell.textContent = Object.keys(station.connected_to).join(', ');
 
-                
+
                 row.appendChild(connectedToCell);
 
                 table.appendChild(row);
@@ -356,7 +368,7 @@
             stationInfoDiv.appendChild(table);
         }
 
-        function updateStreetsInfoTable(graph,stationInfo) {
+        function updateStreetsInfoTable(graph, stationInfo) {
             const streetsInfoDiv = document.getElementById('streets-info');
             streetsInfoDiv.innerHTML = ''; // Clear previous content
 
@@ -389,9 +401,10 @@
             const row = document.createElement('tr');
             Object.entries(street_semaphore_info).forEach(([street, semaphore]) => {
                 const semaphoreCell = document.createElement('td');
-                semaphoreCell.textContent = semaphore;
+                semaphoreCell.style.backgroundColor = semaphore;
+                semaphoreCell.style.padding = '5px';
                 row.appendChild(semaphoreCell);
-                
+
             });
             table.appendChild(row);
 
@@ -409,7 +422,7 @@
 
                         updateCarInfoTable(Object.values(data.car_info));
                         updateStationInfoTable(Object.values(data.station_info));
-                        updateStreetsInfoTable(Object.keys(data.graph),Object.values(data.station_info));
+                        updateStreetsInfoTable(Object.keys(data.graph), Object.values(data.station_info));
 
                         // Clear existing markers
                         map.eachLayer(function (layer) {
@@ -478,11 +491,15 @@
                                     }
                                 });
                             });
-
                         }
 
+                        if (showEdges) {
+                            Object.entries(data.edges).forEach(([key, edge]) => {
+                                let marker = L.marker(edge).addTo(map);
+                                marker.bindPopup(`<b>Edge:${key}</b>`, { autoClose: false, closeOnClick: false });
+                            });
 
-
+                        }
 
                     }
                     ).catch(error => {
