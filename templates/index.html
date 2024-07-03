@@ -62,7 +62,6 @@
         }
 
         #frame-info {
-            margin-top: 20px;
             padding: 10px;
             width: 100%;
             height: 100%;
@@ -76,6 +75,24 @@
 
         #frame-checkboxes {
             padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 2px;
+            text-align: left;
         }
     </style>
 </head>
@@ -106,6 +123,13 @@
 
                         </label>
                     </div>
+                    <div class="check">
+                        <label for="ShowLanes">
+                            <input type="checkbox" id="showLanes">
+                            lanes
+
+                        </label>
+                    </div>
                 </div>
                 <div id="frame-state">
                     state: <span id="state">stopped</span>
@@ -114,8 +138,12 @@
             </div>
 
             <div id="frame-info">
-                ola
-
+                <h3>Cars</h3>
+                <div id="car-info"></div>
+                <h3>Stations</h3>
+                <div id="station-info"></div>
+                <h3>Streets</h3>
+                <div id="streets-info"></div>
             </div>
         </div>
 
@@ -129,13 +157,45 @@
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        var carIcon = L.icon({
-            iconUrl: 'static/car.png',
-            iconSize: [24, 24],
-        });
+        // var carIcon = L.icon({
+        //     iconUrl: 'static/car.svg',
+        //     iconSize: [24, 24],
+        // });
+
+        function createCarIcon(color) {
+            const carSvg = `
+        <svg fill="${color}" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+            width="800px" height="800px" viewBox="0 0 31.445 31.445"
+            xml:space="preserve">
+        <g>
+            <g>
+                <path d="M7.592,16.86c-1.77,0-3.203,1.434-3.203,3.204s1.434,3.204,3.203,3.204c1.768,0,3.203-1.434,3.203-3.204
+                    S9.36,16.86,7.592,16.86z M7.592,21.032c-0.532,0-0.968-0.434-0.968-0.967s0.436-0.967,0.968-0.967
+                    c0.531,0,0.966,0.434,0.966,0.967S8.124,21.032,7.592,21.032z"/>
+                <path d="M30.915,17.439l-0.524-4.262c-0.103-0.818-0.818-1.418-1.643-1.373L27.6,11.868l-3.564-3.211
+                    c-0.344-0.309-0.787-0.479-1.249-0.479l-7.241-0.001c-1.625,0-3.201,0.555-4.468,1.573l-4.04,3.246l-5.433,1.358
+                    c-0.698,0.174-1.188,0.802-1.188,1.521v1.566C0.187,17.44,0,17.626,0,17.856v2.071c0,0.295,0.239,0.534,0.534,0.534h3.067
+                    c-0.013-0.133-0.04-0.26-0.04-0.396c0-2.227,1.804-4.029,4.03-4.029s4.029,1.802,4.029,4.029c0,0.137-0.028,0.264-0.041,0.396
+                    h8.493c-0.012-0.133-0.039-0.26-0.039-0.396c0-2.227,1.804-4.029,4.029-4.029c2.227,0,4.028,1.802,4.028,4.029
+                    c0,0.137-0.026,0.264-0.04,0.396h2.861c0.295,0,0.533-0.239,0.533-0.534v-1.953C31.449,17.68,31.21,17.439,30.915,17.439z
+                    M20.168,12.202l-10.102,0.511L12,11.158c1.051-0.845,2.357-1.305,3.706-1.305h4.462V12.202z M21.846,12.117V9.854h0.657
+                    c0.228,0,0.447,0.084,0.616,0.237l2.062,1.856L21.846,12.117z"/>
+                <path d="M24.064,16.86c-1.77,0-3.203,1.434-3.203,3.204s1.434,3.204,3.203,3.204c1.769,0,3.203-1.434,3.203-3.204
+                    S25.833,16.86,24.064,16.86z M24.064,21.032c-0.533,0-0.967-0.434-0.967-0.967s0.434-0.967,0.967-0.967
+                    c0.531,0,0.967,0.434,0.967,0.967S24.596,21.032,24.064,21.032z"/>
+            </g>
+        </g>
+        </svg>`;
+            return L.icon({
+                iconUrl: `data:image/svg+xml;base64,${btoa(carSvg)}`,
+                iconSize: [24, 24],
+            });
+        }
+
+
+
         var antennaIcon = L.icon({
             iconUrl: 'static/antenna.png',
-
             iconSize: [24, 24],
         });
 
@@ -145,6 +205,15 @@
         let hasStarted = false;
         let showConnections = false;
         let showRange = false;
+        let showLanes = false;
+
+        let car_colors = {
+            5: 'blue',
+            6: 'red',
+            7: 'green',
+            8: 'orange',
+            9: 'purple',
+        }
 
         document.getElementById('showRange').addEventListener('change', function () {
             showRange = this.checked;
@@ -152,6 +221,10 @@
 
         document.getElementById('showConnections').addEventListener('change', function () {
             showConnections = this.checked;
+        });
+
+        document.getElementById('showLanes').addEventListener('change', function () {
+            showLanes = this.checked;
         });
 
         function updateState(newState) {
@@ -176,14 +249,156 @@
                 .then(data => {
                     updateState("stopped");
                     map.eachLayer(function (layer) {
-                            if (layer instanceof L.Marker || layer instanceof L.Polyline || layer instanceof L.Circle) {
-                                map.removeLayer(layer);
-                            }
-                        });
+                        if (layer instanceof L.Marker || layer instanceof L.Polyline || layer instanceof L.Circle) {
+                            map.removeLayer(layer);
+                        }
+                    });
                 });
-                
+
             hasStarted = false;
         }
+
+        function updateCarInfoTable(carInfo) {
+            const carInfoDiv = document.getElementById('car-info');
+            carInfoDiv.innerHTML = ''; // Clear previous content
+
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+            const headers = ['ID', 'Name', 'Location', 'Speed', 'Virtual Semaphore'];
+
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+
+            table.appendChild(headerRow);
+
+            carInfo.forEach(car => {
+                const row = document.createElement('tr');
+
+                const idCell = document.createElement('td');
+                idCell.textContent = car.id;
+                row.appendChild(idCell);
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = car.name;
+                row.appendChild(nameCell);
+
+                const locationCell = document.createElement('td');
+                locationCell.textContent = `[${car.location[0]}, ${car.location[1]}]`;
+                row.appendChild(locationCell);
+
+                const speedCell = document.createElement('td');
+                speedCell.textContent = car.speed;
+                row.appendChild(speedCell);
+
+                const virtSemaphoreCell = document.createElement('td');
+                if (car.virt_semaphore == 0) {
+                    virtSemaphoreCell.textContent= 'green';
+                } else if (car.virt_semaphore == 1) {
+                    virtSemaphoreCell.textContent= 'yellow';
+                } else {
+                    virtSemaphoreCell.textContent= 'red';
+                }
+                row.appendChild(virtSemaphoreCell);
+
+                table.appendChild(row);
+            });
+
+            carInfoDiv.appendChild(table);
+        }
+
+        function updateStationInfoTable(stationInfo) {
+            const stationInfoDiv = document.getElementById('station-info');
+            stationInfoDiv.innerHTML = ''; // Clear previous content
+
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+            const headers = ['ID', 'Name', 'Location', 'Range', 'Connected_to'];
+
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+
+            table.appendChild(headerRow);
+
+            stationInfo.forEach(station => {
+                const row = document.createElement('tr');
+
+                const idCell = document.createElement('td');
+                idCell.textContent = station.id;
+                row.appendChild(idCell);
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = station.name;
+                row.appendChild(nameCell);
+
+                const locationCell = document.createElement('td');
+                locationCell.textContent = `[${station.location[0]}, ${station.location[1]}]`;
+                row.appendChild(locationCell);
+
+                const rangeCell = document.createElement('td');
+                rangeCell.textContent = station.range;
+                row.appendChild(rangeCell);
+
+                const connectedToCell = document.createElement('td');
+                connectedToCell.textContent = Object.keys(station.connected_to).join(', ');
+
+                
+                row.appendChild(connectedToCell);
+
+                table.appendChild(row);
+            });
+
+            stationInfoDiv.appendChild(table);
+        }
+
+        function updateStreetsInfoTable(graph,stationInfo) {
+            const streetsInfoDiv = document.getElementById('streets-info');
+            streetsInfoDiv.innerHTML = ''; // Clear previous content
+
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+
+            const headers = graph;
+
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+
+            table.appendChild(headerRow);
+
+            let street_semaphore_info = {};
+            stationInfo.forEach(station => {
+                Object.entries(station.street_semaphore).forEach(([street, virt_semaphore]) => {
+                    if (virt_semaphore == 0) {
+                        street_semaphore_info[street] = 'green'
+                    } else if (virt_semaphore == 1) {
+                        street_semaphore_info[street] = 'yellow'
+                    } else {
+                        street_semaphore_info[street] = 'red'
+                    }
+                });
+            });
+
+            const row = document.createElement('tr');
+            Object.entries(street_semaphore_info).forEach(([street, semaphore]) => {
+                const semaphoreCell = document.createElement('td');
+                semaphoreCell.textContent = semaphore;
+                row.appendChild(semaphoreCell);
+                
+            });
+            table.appendChild(row);
+
+            streetsInfoDiv.appendChild(table);
+        }
+
+
 
         setInterval(() => {
             if (hasStarted) {
@@ -191,7 +406,11 @@
                     .then(response => response.json())
                     .then(data => {
                         updateState("running");
-                        
+
+                        updateCarInfoTable(Object.values(data.car_info));
+                        updateStationInfoTable(Object.values(data.station_info));
+                        updateStreetsInfoTable(Object.keys(data.graph),Object.values(data.station_info));
+
                         // Clear existing markers
                         map.eachLayer(function (layer) {
                             if (layer instanceof L.Marker || layer instanceof L.Polyline || layer instanceof L.Circle) {
@@ -207,7 +426,7 @@
 
                         // Add car markers
                         Object.entries(data.car_positions).forEach(([key, car]) => {
-                            let marker = L.marker([car[2][0], car[2][1]], { icon: carIcon }).addTo(map);
+                            let marker = L.marker([car[2][0], car[2][1]], { icon: createCarIcon(car_colors[key]) }).addTo(map);
                             marker.bindPopup(`<b>Car Id:${key}</b>`, { autoClose: false, closeOnClick: false });
                         });
 
@@ -232,6 +451,37 @@
                                 }).addTo(map);
                             });
                         }
+
+                        if (showLanes) {
+                            Object.entries(data.station_info).forEach(([key, station]) => {
+                                Object.entries(station.street_semaphore).forEach(([street, semaphore]) => {
+                                    let semaphore_color;
+
+                                    if (semaphore == 0) {
+                                        semaphore_color = 'green'
+                                    } else if (semaphore == 1) {
+                                        semaphore_color = 'yellow'
+                                    } else {
+                                        semaphore_color = 'red'
+                                    }
+
+                                    let edge_street = [data.edges[street[1]], data.edges[street[4]]];
+                                    let street_line;
+
+                                    if (street[1] == 5 && street[4] == 1) {
+                                        street_line = L.polyline([data.edges[street[1]], [40.636878150358626, -8.655393265248966]], { color: semaphore_color, opacity: 0.5 }).addTo(map);
+                                        street_line = L.polyline([[40.636878150358626, -8.655393265248966], [40.637161118268125, -8.65570711867863]], { color: semaphore_color, opacity: 0.5 }).addTo(map);
+                                        street_line = L.polyline([[40.637161118268125, -8.65570711867863], [40.6372710092781, -8.655758062220151]], { color: semaphore_color, opacity: 0.5 }).addTo(map);
+                                        street_line = L.polyline([[40.6372710092781, -8.655758062220151], data.edges[street[4]]], { color: semaphore_color, opacity: 0.5 }).addTo(map);
+                                    } else {
+                                        street_line = L.polyline(edge_street, { color: semaphore_color, opacity: 0.5 }).addTo(map);
+                                    }
+                                });
+                            });
+
+                        }
+
+
 
 
                     }

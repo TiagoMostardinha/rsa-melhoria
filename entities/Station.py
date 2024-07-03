@@ -277,7 +277,6 @@ class Station:
         publish.single('vanetza/in/spatem', json.dumps(spatem), hostname=self.address)
 
 
-    # TODO: set info of station in streets
     def set_station_info_in_region(self):
         intersections_info = {}
         for key,value in self.intersections.items():

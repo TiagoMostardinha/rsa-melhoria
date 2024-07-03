@@ -92,7 +92,8 @@ class Car:
 
             self.set_car_info_in_region()
             
-            
+            # TODO: remove this
+            #time.sleep(2)
             time.sleep(2 + random.random())
 
         client.loop_stop()
@@ -152,8 +153,7 @@ class Car:
         
         if (time.time() - self.last_received_spatem) > 3:
             self.speed = 1
-    
-    # TODO: set info of car in streets
+
     def set_car_info_in_region(self):
         info = {
             "name":self.name,
