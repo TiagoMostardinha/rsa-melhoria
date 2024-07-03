@@ -14,6 +14,8 @@ class Streets:
     stations_location: dict
     connected_to: dict
     station_network: dict
+    station_info: dict
+    car_info:dict
     access: threading.Semaphore
 
     def __init__(self, edges, graph):
@@ -26,6 +28,8 @@ class Streets:
         self.stations_location = {}
         self.connected_to = {}
         self.station_network = {}
+        self.station_info = {}
+        self.car_info = {}
         self.access = threading.Semaphore()
 
 ################## synchronized methods ##################
@@ -145,14 +149,28 @@ class Streets:
         for key,value in self.stations_location.items():
             stations_info[key] = list(value)
 
-        return {
+        msg = {
             "edges": edges_info,
             "graph": graph_info,
             "finished": self.finished,
             "car_positions": car_info,
             "stations_location": stations_info,
-            "connected_to": self.connected_to
+            "connected_to": self.connected_to,
+            "station_info":list(self.station_info.values()),
+            "car_info":list(self.car_info.values())
         }
+
+        return msg
+
+    def set_station_info(self,id,info):
+        self.access.acquire()
+        self.station_info[id] = info
+        self.access.release()
+    
+    def set_car_info(self,id,info):
+        self.access.acquire()
+        self.car_info[id] = info
+        self.access.release()
 
 
 ################## private methods ##################

@@ -72,6 +72,8 @@ class Station:
 
             self.send_spatem()
 
+            self.set_station_info_in_region()
+
         client.loop_stop()
         client.disconnect()
 
@@ -274,3 +276,29 @@ class Station:
         
         publish.single('vanetza/in/spatem', json.dumps(spatem), hostname=self.address)
 
+
+    # TODO: set info of station in streets
+    def set_station_info_in_region(self):
+        intersections_info = {}
+        for key,value in self.intersections.items():
+            intersections_info[key] = []
+            for v in value:
+                intersections_info[key].append(list(v))
+
+
+        street_semaphore_info = {}
+        for key,value in self.street_semaphore.items():
+            street_semaphore_info[str(key)] = value
+
+
+        info = {
+            "name" :            self.name,
+            "id":               self.id,
+            "location":         list(self.location),
+            "intersections":    intersections_info,
+            "range":            self.range,
+            "street_semaphore": street_semaphore_info,
+            "connected_to":     self.connected_to
+        }
+
+        self.streets_region.set_station_info(self.id,info)

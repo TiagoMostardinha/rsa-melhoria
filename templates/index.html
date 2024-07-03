@@ -191,8 +191,7 @@
                     .then(response => response.json())
                     .then(data => {
                         updateState("running");
-                        console.log(data.connected_to);
-
+                        
                         // Clear existing markers
                         map.eachLayer(function (layer) {
                             if (layer instanceof L.Marker || layer instanceof L.Polyline || layer instanceof L.Circle) {

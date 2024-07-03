@@ -90,6 +90,7 @@ class Car:
 
             self.send_cam()
 
+            self.set_car_info_in_region()
             
             
             time.sleep(2 + random.random())
@@ -151,3 +152,15 @@ class Car:
         
         if (time.time() - self.last_received_spatem) > 3:
             self.speed = 1
+    
+    # TODO: set info of car in streets
+    def set_car_info_in_region(self):
+        info = {
+            "name":self.name,
+            "id":self.id,
+            "speed":self.speed,
+            "location":list(self.location),
+            "virt_semaphore":self.virt_semaphore
+        }
+
+        self.streets_region.set_car_info(self.id,info)
