@@ -97,8 +97,8 @@ def init_simulation():
         obu_list.append(Car(streets_region, "obu1", 5,"192.168.98.21", "6e:06:e0:03:00:05", 7,(1,3)))
         obu_list.append(Car(streets_region, "obu2", 6,"192.168.98.22", "6e:06:e0:03:00:06", 7, (2,3)))
         obu_list.append(Car(streets_region, "obu3", 7,"192.168.98.23", "6e:06:e0:03:00:07", 0, (2,3)))
-        obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", 2, (2,3)))
-        obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", 3, (2,3)))
+        obu_list.append(Car(streets_region, "obu4", 8,"192.168.98.24", "6e:06:e0:03:00:08", 3, (1,3)))
+        obu_list.append(Car(streets_region, "obu5", 9,"192.168.98.25", "6e:06:e0:03:00:09", 4, (2,3)))
 
     rsu_list.append(Station(streets_region, "rsu1", 1,"192.168.98.11", "6e:06:e0:03:00:01", (40.637983, -8.656642),choose_intersection(intersections,[0]),rsu_range))
     rsu_list.append(Station(streets_region, "rsu2", 2,"192.168.98.12", "6e:06:e0:03:00:02", (40.637285, -8.656363),choose_intersection(intersections,[1,3]),rsu_range))
