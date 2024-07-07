@@ -83,7 +83,7 @@ def init_simulation():
 
     # Creating Cars(obu) and Stations(rsu)
     rsu_range = 60
-    isRandom = True
+    isRandom = False
 
     if isRandom:
         car_street_position = random_street_position(graph,5)

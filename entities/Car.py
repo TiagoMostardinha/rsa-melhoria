@@ -93,8 +93,8 @@ class Car:
             self.set_car_info_in_region()
             
             # TODO: remove this
-            #time.sleep(2)
-            time.sleep(2 + random.random())
+            time.sleep(2)
+            #time.sleep(2 + random.random())
 
         client.loop_stop()
         client.disconnect()
